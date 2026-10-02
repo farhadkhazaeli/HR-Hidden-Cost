@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hidden Cost Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f0f8 0%, #f5f7fa 100%);
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px 100px;
+    background: linear-gradient(135deg, #1F4E78, #2E75B6);
+    border-radius: 12px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(31,78,120,0.3);
+  }
+  header h1 { font-size: 22px; margin-bottom: 8px; }
+  header p { font-size: 13px; opacity: 0.9; }
+
+  .lang-switch {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    gap: 5px;
+    background: rgba(255,255,255,0.15);
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .lang-switch button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .lang-switch button.active { background: #fff; color: #1F4E78; }
+  .lang-switch button:hover:not(.active) { background: rgba(255,255,255,0.2); }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1F4E78;
+    margin: 20px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #E2EFDA;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    background: #2E75B6;
+    border-radius: 2px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #444;
+  }
+  .input-with-calc { position: relative; }
+  .input-with-calc input {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border: 1.5px solid #d0d7de;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.2s;
+  }
+  [dir="ltr"] .input-with-calc input {
+    padding: 10px 12px 10px 40px;
+  }
+  .input-with-calc input:focus {
+    border-color: #2E75B6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46,117,182,0.1);
+  }
+  .calc-trigger {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 6px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #f8f9fa;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  [dir="ltr"] .calc-trigger { left: auto; right: 6px; }
+  .calc-trigger:hover { background: #e9ecef; border-color: #adb5bd; color: #1F4E78; }
+
+  .form-group select {
+    padding: 10px 12px;
+    border: 1.5px solid #d0d7de;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+  }
+  .form-group select:focus {
+    border-color: #2E75B6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46,117,182,0.1);
+  }
+
+  .btn {
+    padding: 13px 30px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-calc-main {
+    background: linear-gradient(135deg, #2E75B6, #1F4E78);
+    color: #fff;
+    width: 100%;
+    margin-top: 20px;
+    font-size: 16px;
+  }
+  .btn-calc-main:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(31,78,120,0.3); }
+  .btn-print {
+    background: #548235;
+    color: #fff;
+    margin-inline-start: 8px;
+  }
+  .btn-print:hover { background: #3d6126; }
+  .btn-reset { background: #999; color: #fff; }
+  .btn-reset:hover { background: #777; }
+
+  .employee-info {
+    background: #E2EFDA;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    border-inline-start: 4px solid #548235;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+  th {
+    background: #548235;
+    color: #fff;
+    padding: 12px;
+    text-align: start;
+    font-weight: bold;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: start;
+  }
+  tbody tr:nth-child(even) { background: #f9f9f9; }
+  tbody tr:hover { background: #E2EFDA; }
+  tbody tr:last-child td { border-bottom: 2px solid #548235; font-weight: bold; }
+
+  .summary-box {
+    background: #FFF8E1;
+    border: 2px solid #BF8F00;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+    text-align: center;
+  }
+  .summary-box .total {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .summary-box .ratio {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.8;
+  }
+  .summary-box .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0 4px;
+  }
+  .badge-pos { background: #FCE4D6; color: #C00000; }
+  .badge-neg { background: #D5F0DB; color: #008000; }
+
+  .actions { margin-top: 18px; text-align: center; }
+  footer { text-align: center; color: #888; font-size: 12px; padding: 15px; }
+
+  /* =============================================
+     ============ MINI CALCULATOR ============
+     =============================================
+     Neutral palette: white / light gray / dark gray / blue accent
+  */
+  .mini-calc {
+    position: fixed;
+    z-index: 9999;
+    width: 280px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05);
+    padding: 14px;
+    display: none;
+    border: 1px solid #dee2e6;
+  }
+  .mini-calc.open { display: block; animation: popIn 0.15s ease; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .mini-calc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+  }
+  .mini-calc-header span {
+    font-weight: bold;
+    color: #495057;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  .mini-calc-close {
+    background: transparent;
+    border: none;
+    color: #adb5bd;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .mini-calc-close:hover { color: #495057; background: #f1f3f5; }
+
+  .mini-calc-display {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    text-align: right;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 18px;
+    min-height: 52px;
+    word-break: break-all;
+    color: #212529;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  [dir="ltr"] .mini-calc-display { text-align: left; }
+  .mini-calc-display .preview {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: normal;
+    display: block;
+    margin-top: 4px;
+    font-family: Tahoma, Arial, sans-serif;
+  }
+
+  .mini-calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .mini-calc-grid button {
+    padding: 13px 0;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #212529;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .mini-calc-grid button:hover {
+    background: #f1f3f5;
+    border-color: #ced4da;
+  }
+  .mini-calc-grid button:active {
+    background: #e9ecef;
+    transform: scale(0.97);
+  }
+
+  /* Operators */
+  .mini-calc-grid button.op {
+    background: #e9ecef;
+    color: #343a40;
+    border-color: #ced4da;
+  }
+  .mini-calc-grid button.op:hover {
+    background: #dee2e6;
+    color: #212529;
+  }
+  .mini-calc-grid button.op:active { background: #ced4da; }
+
+  /* Equals button */
+  .mini-calc-grid button.eq {
+    background: #2E75B6;
+    color: #ffffff;
+    border-color: #2E75B6;
+  }
+  .mini-calc-grid button.eq:hover {
+    background: #1F4E78;
+    border-color: #1F4E78;
+  }
+  .mini-calc-grid button.eq:active { background: #1a3d5e; }
+
+  /* Clear button */
+  .mini-calc-grid button.clear {
+    background: #495057;
+    color: #ffffff;
+    border-color: #495057;
+  }
+  .mini-calc-grid button.clear:hover {
+    background: #343a40;
+    border-color: #343a40;
+  }
+  .mini-calc-grid button.clear:active { background: #212529; }
+
+  /* Apply button */
+  .mini-calc-grid button.apply {
+    grid-column: span 4;
+    margin-top: 8px;
+    padding: 12px 0;
+    background: #ffffff;
+    color: #2E75B6;
+    border: 1.5px solid #2E75B6;
+    font-size: 14px;
+  }
+  .mini-calc-grid button.apply:hover {
+    background: #2E75B6;
+    color: #ffffff;
+  }
+  .mini-calc-grid button.apply:active { background: #1F4E78; border-color: #1F4E78; }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: #fff; padding: 0; font-size: 11pt; }
+    .container { max-width: 100%; }
+    .no-print { display: none !important; }
+    .mini-calc { display: none !important; }
+    header {
+      background: #fff !important;
+      color: #000 !important;
+      border-bottom: 2px solid #333;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 10px 0;
+    }
+    header h1 { color: #000; font-size: 16pt; }
+    header p { color: #444; }
+    .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    th {
+      background: #ddd !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .summary-box {
+      background: #f5f5f5 !important;
+      border: 2px solid #333 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .employee-info {
+      background: #f0f0f0 !important;
+      border-inline-start: 4px solid #333 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+
+  /* ============ V2 COMPANY DASHBOARD ============ */
+  .top-nav { display:flex; gap:8px; justify-content:center; margin:-8px 0 20px; flex-wrap:wrap; }
+  .nav-btn { border:1.5px solid #2E75B6; background:#fff; color:#1F4E78; padding:9px 18px; border-radius:20px; font-weight:bold; cursor:pointer; }
+  .nav-btn.active { background:#1F4E78; color:#fff; }
+  .dashboard { display:none; }
+  .dashboard.active { display:block; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:14px 0 20px; }
+  .kpi { background:#fff; border:1px solid #e1e7ec; border-radius:10px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .kpi .k-label { font-size:12px; color:#667; margin-bottom:7px; }
+  .kpi .k-value { font-size:20px; font-weight:bold; color:#1F4E78; }
+  .kpi .k-note { font-size:11px; color:#89939d; margin-top:5px; }
+  .dash-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:16px; }
+  .panel { background:#fff; border:1px solid #e1e7ec; border-radius:10px; padding:18px; margin-bottom:16px; }
+  .panel h3 { color:#1F4E78; font-size:15px; margin-bottom:12px; }
+  .driver-row { display:grid; grid-template-columns:150px 1fr 100px; gap:10px; align-items:center; margin:9px 0; font-size:12px; }
+  .bar-track { height:10px; background:#edf1f4; border-radius:6px; overflow:hidden; }
+  .bar-fill { height:100%; background:linear-gradient(90deg,#2E75B6,#548235); border-radius:6px; }
+  .risk-high { color:#C00000; font-weight:bold; }
+  .risk-med { color:#BF8F00; font-weight:bold; }
+  .risk-low { color:#548235; font-weight:bold; }
+  .empty-state { text-align:center; padding:30px 10px; color:#7a858f; font-size:13px; }
+  .small-btn { border:none; border-radius:6px; padding:7px 11px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:bold; }
+  .small-blue { background:#2E75B6; color:#fff; }
+  .small-green { background:#548235; color:#fff; }
+  .small-red { background:#fbe5e5; color:#a40000; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 15px; }
+  .scenario-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .scenario-result { margin-top:14px; padding:14px; border-radius:8px; background:#E2EFDA; border-inline-start:4px solid #548235; }
+  .scenario-result strong { color:#1F4E78; }
+  .confidence { font-size:11px; padding:3px 8px; border-radius:10px; background:#eef2f5; color:#58636e; display:inline-block; }
+  .method-note { font-size:12px; line-height:1.8; color:#5f6b76; background:#f7f9fb; border:1px solid #e5eaee; padding:12px; border-radius:8px; }
+  @media(max-width:800px){ .kpi-grid{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}.scenario-grid{grid-template-columns:1fr}.driver-row{grid-template-columns:110px 1fr 80px} }
+  @media(max-width:480px){ .kpi-grid{grid-template-columns:1fr} }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="no-print">
+<h1 data-i18n="title">Human Resource Hidden Cost Calculator</h1>
+    <p data-i18n="subtitle">Fill in the fields below and click Calculate</p>
+  </header>
+
+
+  <div class="top-nav no-print" id="topNav">
+    <button class="nav-btn active" id="navCalc" onclick="showView('calc')">Calculator</button>
+    <button class="nav-btn" id="navDash" onclick="showView('dash')">Company Dashboard</button>
+  </div>
+
+  <div id="calcView">
+  <section class="card no-print" id="inputCard">
+
+    <div class="section-title" data-i18n="sec_basic">Employee Basic Information</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label data-i18n="lbl_name">Employee Name</label>
+        <input type="text" id="employeeName" data-i18n-placeholder="ph_name" placeholder="e.g. John Smith">
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_dept">Department</label>
+        <input type="text" id="department" data-i18n-placeholder="ph_dept" placeholder="e.g. Engineering">
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_base">Annual Base Salary</label>
+        <div class="input-with-calc">
+          <input type="text" id="baseSalary" value="200,000,000" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'baseSalary')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_benefits">Annual Benefits</label>
+        <div class="input-with-calc">
+          <input type="text" id="benefits" value="30,000,000" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'benefits')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_tax">Tax / Employer Insurance</label>
+        <div class="input-with-calc">
+          <input type="text" id="tax" value="10,000,000" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'tax')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_overhead">Overhead</label>
+        <div class="input-with-calc">
+          <input type="text" id="overhead" value="20,000,000" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'overhead')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_hours">Annual Effective Work Hours</label>
+        <div class="input-with-calc">
+          <input type="text" id="workHours" value="1,800" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'workHours')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_absence">Annual Absence / Delay Hours</label>
+        <div class="input-with-calc">
+          <input type="text" id="absenceHours" value="20" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'absenceHours')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_mgmt">Extra Manager Supervision Hours</label>
+        <div class="input-with-calc">
+          <input type="text" id="mgmtHours" value="30" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'mgmtHours')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_damage">Direct Damage Imposed</label>
+        <div class="input-with-calc">
+          <input type="text" id="directDamage" value="0" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'directDamage')" title="Calculator">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_profit">Attributed Project Profit</label>
+        <div class="input-with-calc">
+          <input type="text" id="projectProfit" value="0" inputmode="numeric">
+          <button type="button" class="calc-trigger" onclick="openMiniCalc(event, 'projectProfit')" title="Calculator">🧮</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" data-i18n="sec_factors">Rating Factors (select from list)</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label data-i18n="lbl_job">Job Level (J)</label>
+        <select id="jobLevel">
+          <option value="Support" data-i18n="opt_job_support">Support / Simple (1.0)</option>
+          <option value="Operational" data-i18n="opt_job_oper">Operational (1.1)</option>
+          <option value="Specialist" selected data-i18n="opt_job_spec">Specialist (1.3)</option>
+          <option value="Key Role" data-i18n="opt_job_key">Key Role (1.6)</option>
+          <option value="Strategic/Rare" data-i18n="opt_job_strat">Strategic / Rare (2.0)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_presence">Presence Importance (C)</label>
+        <select id="presence">
+          <option value="Low" data-i18n="opt_pres_low">Low (1.0)</option>
+          <option value="Medium" selected data-i18n="opt_pres_med">Medium (1.2)</option>
+          <option value="High" data-i18n="opt_pres_high">High (1.5)</option>
+          <option value="Critical" data-i18n="opt_pres_crit">Critical (2.0)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_exp">Experience / Replaceability (E)</label>
+        <select id="experience">
+          <option value="Quick Replace" data-i18n="opt_exp_quick">Quick Replace (1.0)</option>
+          <option value="Months to Train" selected data-i18n="opt_exp_months">Months to Train (1.3)</option>
+          <option value="Years of Experience" data-i18n="opt_exp_years">Years of Experience (1.7)</option>
+          <option value="Unique Knowledge" data-i18n="opt_exp_unique">Unique Knowledge (2.2)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_turnover">Turnover Risk (T)</label>
+        <select id="turnover">
+          <option value="Very Low (0.05)" data-i18n="opt_turn_vlow">Very Low (0.05)</option>
+          <option value="Low (0.10)" selected data-i18n="opt_turn_low">Low (0.10)</option>
+          <option value="Medium (0.20)" data-i18n="opt_turn_med">Medium (0.20)</option>
+          <option value="High (0.30)" data-i18n="opt_turn_high">High (0.30)</option>
+          <option value="Very High (0.40)" data-i18n="opt_turn_vhigh">Very High (0.40)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_repl">Replacement Cost (R)</label>
+        <select id="replacement">
+          <option value="Junior" data-i18n="opt_repl_junior">Junior (0.3)</option>
+          <option value="Ordinary" selected data-i18n="opt_repl_ord">Ordinary (0.5)</option>
+          <option value="Specialist" data-i18n="opt_repl_spec">Specialist (1.0)</option>
+          <option value="Key" data-i18n="opt_repl_key">Key (1.5)</option>
+          <option value="Rare" data-i18n="opt_repl_rare">Rare (2.0)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_perf">Performance Score (1 to 5)</label>
+        <select id="performance">
+          <option value="1" data-i18n="opt_perf_1">1 - Very Poor</option>
+          <option value="2" data-i18n="opt_perf_2">2 - Poor</option>
+          <option value="3" selected data-i18n="opt_perf_3">3 - Average</option>
+          <option value="4" data-i18n="opt_perf_4">4 - Good</option>
+          <option value="5" data-i18n="opt_perf_5">5 - Excellent</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-calc-main" onclick="calculate()" data-i18n="btn_calc">Calculate Hidden Cost</button>
+  </section>
+
+  <section class="card" id="resultsCard" style="display:none;">
+    <div class="section-title" data-i18n="sec_result">Calculation Result</div>
+    <div class="employee-info" id="employeeInfo"></div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60%;" data-i18n="th_item">Hidden Cost Item</th>
+          <th style="width:40%;" data-i18n="th_amount">Amount</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <div class="summary-box" id="summaryBox"></div>
+    <div class="actions no-print">
+      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">Print Result</button>
+      <button class="btn btn-print" style="background:#2E75B6" onclick="saveCurrentEmployee()">Save to Company Dashboard</button>
+      <button class="btn btn-reset" onclick="resetForm()" data-i18n="btn_reset">New Calculation</button>
+    </div>
+
+  </section>
+  </div><!-- /calcView -->
+
+  <section class="dashboard" id="dashView">
+    <div class="card">
+      <div class="section-title" id="dashTitle">Company Hidden Cost Dashboard</div>
+      <div class="toolbar no-print">
+        <button class="small-btn small-blue" onclick="showView('calc')">+ Add / Calculate Employee</button>
+        <button class="small-btn small-green" onclick="exportCompanyData()">Export Company Data</button>
+        <button class="small-btn small-blue" onclick="document.getElementById('importFile').click()">Import Data</button>
+        <button class="small-btn small-red" onclick="clearCompanyData()">Clear Saved Data</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importCompanyData(event)">
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="k-label">Employees analyzed</div><div class="k-value" id="kEmployees">0</div><div class="k-note">Saved in this browser</div></div>
+        <div class="kpi"><div class="k-label">Annual hidden cost</div><div class="k-value" id="kHidden">0</div><div class="k-note">Net of attributed project profit</div></div>
+        <div class="kpi"><div class="k-label">Hidden cost / employment cost</div><div class="k-value" id="kRatio">0%</div><div class="k-note">Portfolio-level ratio</div></div>
+        <div class="kpi"><div class="k-label">Highest-risk department</div><div class="k-value" id="kDept">—</div><div class="k-note">By total hidden cost</div></div>
+      </div>
+      <div class="dash-grid">
+        <div>
+          <div class="panel"><h3>Cost Drivers</h3><div id="driverChart"></div></div>
+          <div class="panel"><h3>Department View</h3><div id="deptTable"></div></div>
+        </div>
+        <div>
+          <div class="panel"><h3>Employees Requiring Attention</h3><div id="riskTable"></div></div>
+          <div class="panel"><h3>Management Interpretation</h3><div id="managementInsight" class="method-note"></div></div>
+        </div>
+      </div>
+      <div class="panel no-print">
+        <h3>Improvement Scenario</h3>
+        <div class="scenario-grid">
+          <div class="form-group"><label>Employee</label><select id="scenarioEmployee" onchange="loadScenarioEmployee()"></select></div>
+          <div class="form-group"><label>Target performance (1–5)</label><select id="scenarioPerf"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+          <div class="form-group"><label>Target annual absence hours</label><input type="number" min="0" id="scenarioAbsence" value="0"></div>
+          <div class="form-group"><label>Target turnover risk</label><select id="scenarioTurn"><option value="0.05">5%</option><option value="0.10">10%</option><option value="0.20">20%</option><option value="0.30">30%</option><option value="0.40">40%</option></select></div>
+          <div class="form-group"><label>Planned intervention cost</label><input type="number" min="0" id="scenarioInvestment" value="0"></div>
+          <div class="form-group" style="justify-content:end"><button class="btn btn-calc-main" style="margin-top:22px" onclick="runScenario()">Calculate Scenario</button></div>
+        </div>
+        <div id="scenarioResult"></div>
+      </div>
+      <div class="panel">
+        <h3>Method & Confidence</h3>
+        <div class="method-note">This dashboard separates recorded inputs from model-derived estimates. Salary, benefits, tax/insurance, overhead, absence, management hours, direct damage and project profit are user-entered values. Presenteeism, talent waste, turnover/replacement, knowledge loss and learning-curve costs are estimates produced by the calculator model. Use the results as a management decision-support indicator, not as audited accounting cost. For stronger accuracy, calibrate coefficients against your company's historical HR and project data.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="no-print" style="margin-top:28px; padding:24px 16px; border-top:1px solid #d9e2ec; text-align:center; line-height:1.8;">
+  <div style="font-weight:700; color:#1F4E78; margin-bottom:4px;">Hidden Cost Company Dashboard — Public Beta</div>
+  <div>All calculations run in your browser. No data is sent anywhere.</div>
+  <div style="margin-top:8px;">Created by <strong>Farhad Khazaeli</strong></div>
+  <div>
+    Email: <a href="mailto:farhad.khazaeli@gmail.com" style="color:#2E75B6;">farhad.khazaeli@gmail.com</a>
+    &nbsp; | &nbsp;
+    LinkedIn: <a href="https://www.linkedin.com/in/farhad-khazaeli/" target="_blank" rel="noopener noreferrer" style="color:#2E75B6;">linkedin.com/in/farhad-khazaeli</a>
+  </div>
+  <button type="button" onclick="openFeedbackEmail()" style="margin-top:14px; padding:10px 18px; border:0; border-radius:8px; background:#2E75B6; color:white; font:inherit; font-weight:700; cursor:pointer;">Send Feedback</button>
+  <div style="font-size:11px; color:#777; margin-top:10px; max-width:760px; margin-left:auto; margin-right:auto;">Decision-support beta. Results are model-based estimates and should be validated against your organization’s actual data and assumptions before being used for financial or HR decisions.</div>
+</footer>
+
+</div>
+
+<!-- ============ Mini Calculator Popup ============ -->
+<div class="mini-calc" id="miniCalc">
+  <div class="mini-calc-header">
+    <span data-i18n="calc_title">Calculator</span>
+    <button type="button" class="mini-calc-close" onclick="closeMiniCalc()">×</button>
+  </div>
+  <div class="mini-calc-display" id="calcDisplay">0<span class="preview" id="calcPreview"></span></div>
+  <div class="mini-calc-grid" id="calcGrid"></div>
+</div>
+
+<script>
+const translations = {
+  en: {
+    title: "Human Resource Hidden Cost Calculator",
+    subtitle: "Fill in the fields below and click Calculate",
+    sec_basic: "Employee Basic Information",
+    sec_factors: "Rating Factors (select from list)",
+    sec_result: "Calculation Result",
+    lbl_name: "Employee Name",
+    lbl_dept: "Department",
+    lbl_base: "Annual Base Salary",
+    lbl_benefits: "Annual Benefits",
+    lbl_tax: "Tax / Employer Insurance",
+    lbl_overhead: "Overhead",
+    lbl_hours: "Annual Effective Work Hours",
+    lbl_absence: "Annual Absence / Delay Hours",
+    lbl_mgmt: "Extra Manager Supervision Hours",
+    lbl_damage: "Direct Damage Imposed",
+    lbl_profit: "Attributed Project Profit",
+    lbl_job: "Job Level (J)",
+    lbl_presence: "Presence Importance (C)",
+    lbl_exp: "Experience / Replaceability (E)",
+    lbl_turnover: "Turnover Risk (T)",
+    lbl_repl: "Replacement Cost (R)",
+    lbl_perf: "Performance Score (1 to 5)",
+    ph_name: "e.g. John Smith",
+    ph_dept: "e.g. Engineering",
+    opt_job_support: "Support / Simple (1.0)",
+    opt_job_oper: "Operational (1.1)",
+    opt_job_spec: "Specialist (1.3)",
+    opt_job_key: "Key Role (1.6)",
+    opt_job_strat: "Strategic / Rare (2.0)",
+    opt_pres_low: "Low (1.0)",
+    opt_pres_med: "Medium (1.2)",
+    opt_pres_high: "High (1.5)",
+    opt_pres_crit: "Critical (2.0)",
+    opt_exp_quick: "Quick Replace (1.0)",
+    opt_exp_months: "Months to Train (1.3)",
+    opt_exp_years: "Years of Experience (1.7)",
+    opt_exp_unique: "Unique Knowledge (2.2)",
+    opt_turn_vlow: "Very Low (0.05)",
+    opt_turn_low: "Low (0.10)",
+    opt_turn_med: "Medium (0.20)",
+    opt_turn_high: "High (0.30)",
+    opt_turn_vhigh: "Very High (0.40)",
+    opt_repl_junior: "Junior (0.3)",
+    opt_repl_ord: "Ordinary (0.5)",
+    opt_repl_spec: "Specialist (1.0)",
+    opt_repl_key: "Key (1.5)",
+    opt_repl_rare: "Rare (2.0)",
+    opt_perf_1: "1 - Very Poor",
+    opt_perf_2: "2 - Poor",
+    opt_perf_3: "3 - Average",
+    opt_perf_4: "4 - Good",
+    opt_perf_5: "5 - Excellent",
+    btn_calc: "Calculate Hidden Cost",
+    btn_print: "Print Result",
+    btn_reset: "New Calculation",
+    th_item: "Hidden Cost Item",
+    th_amount: "Amount",
+    footer: "All calculations run in your browser. No data is sent anywhere.",
+    emp_name: "Employee",
+    emp_dept: "Department",
+    emp_total: "Total Employment Cost",
+    curr: "",
+    item1: "1. Presenteeism",
+    item2: "2. Talent Waste",
+    item3: "3. Absence & Delay",
+    item4: "4. Replacement & Turnover",
+    item5: "5. Knowledge Loss",
+    item6: "6. Successor Training Curve",
+    item7: "7. Extra Management",
+    sum7: "Sum of items 1-7 (overlap factor 0.85)",
+    damage: "8. Direct Damage Imposed",
+    profit: "9. Project Profit Offset (deduction)",
+    total: "Total Hidden Cost",
+    ratioS: "Ratio to Total Employment Cost",
+    ratioBase: "Ratio to Base Salary",
+    badge_pos: "Net Hidden Cost",
+    badge_neg: "Net Positive Value",
+    no_name: "Unnamed",
+    dash: "—",
+    calc_title: "Calculator"
+  }
+};
+
+let currentLang = 'en';
+
+function applyTranslations() {
+  const t = translations[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key]) el.placeholder = t[key];
+  });
+  buildCalcButtons();
+}
+
+function setLang() {
+  currentLang = 'en';
+  const html = document.getElementById('htmlRoot');
+  html.lang = 'en';
+  html.dir = 'ltr';
+  document.title = translations.en.title;
+  applyTranslations();
+  if (document.getElementById('resultsCard').style.display === 'block') { calculate(); }
+}
+
+function onlyDigits(str) { return String(str).replace(/[^\d]/g, ''); }
+function withComma(num) {
+  if (num === '' || num === null || num === undefined) return '';
+  return Number(num).toLocaleString('en-US');
+}
+function attachCommaFormat(inputId) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const initial = onlyDigits(el.value);
+  if (initial) el.value = withComma(initial);
+  el.addEventListener('input', function(e) {
+    const digits = onlyDigits(e.target.value);
+    if (digits === '') { e.target.value = ''; return; }
+    e.target.value = withComma(digits);
+  });
+}
+
+const lookupTables = {
+  jobLevel: { "Support": 1, "Operational": 1.1, "Specialist": 1.3, "Key Role": 1.6, "Strategic/Rare": 2 },
+  presence: { "Low": 1, "Medium": 1.2, "High": 1.5, "Critical": 2 },
+  experience: { "Quick Replace": 1, "Months to Train": 1.3, "Years of Experience": 1.7, "Unique Knowledge": 2.2 },
+  turnover: { "Very Low (0.05)": 0.05, "Low (0.10)": 0.1, "Medium (0.20)": 0.2, "High (0.30)": 0.3, "Very High (0.40)": 0.4 },
+  replacement: { "Junior": 0.3, "Ordinary": 0.5, "Specialist": 1, "Key": 1.5, "Rare": 2 }
+};
+function getFactor(value, type) { return lookupTables[type][value] || 1; }
+function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+function val(id) {
+  const v = document.getElementById(id).value;
+  const digits = onlyDigits(v);
+  return digits === '' ? 0 : Number(digits);
+}
+
+// ============ MINI CALCULATOR ============
+let calcTargetInput = null;
+let calcExpression = '';
+let calcResult = 0;
+let calcJustEvaluated = false;
+
+function openMiniCalc(event, targetId) {
+  event.stopPropagation();
+  calcTargetInput = document.getElementById(targetId);
+  const current = onlyDigits(calcTargetInput.value);
+  calcExpression = current || '';
+  calcResult = current ? Number(current) : 0;
+  calcJustEvaluated = false;
+  updateCalcDisplay();
+
+  const popup = document.getElementById('miniCalc');
+  popup.classList.add('open');
+
+  const btn = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const popupWidth = 280;
+  const popupHeight = 360;
+
+  let top = rect.bottom + 8;
+  let left = rect.left;
+
+  if (top + popupHeight > window.innerHeight) {
+    top = rect.top - popupHeight - 8;
+    if (top < 8) top = 8;
+  }
+  if (left + popupWidth > window.innerWidth) {
+    left = window.innerWidth - popupWidth - 8;
+  }
+  if (left < 8) left = 8;
+
+  popup.style.top = top + 'px';
+  popup.style.left = left + 'px';
+}
+
+function closeMiniCalc() {
+  document.getElementById('miniCalc').classList.remove('open');
+  calcTargetInput = null;
+}
+
+function buildCalcButtons() {
+  const grid = document.getElementById('calcGrid');
+
+  const buttons = [
+    { label: 'C', action: 'clear', cls: 'clear' },
+    { label: '⌫', action: 'back', cls: 'clear' },
+    { label: '÷', action: '/', cls: 'op' },
+    { label: '×', action: '*', cls: 'op' },
+    { label: '7', action: '7' },
+    { label: '8', action: '8' },
+    { label: '9', action: '9' },
+    { label: '−', action: '-', cls: 'op' },
+    { label: '4', action: '4' },
+    { label: '5', action: '5' },
+    { label: '6', action: '6' },
+    { label: '+', action: '+', cls: 'op' },
+    { label: '1', action: '1' },
+    { label: '2', action: '2' },
+    { label: '3', action: '3' },
+    { label: '=', action: '=', cls: 'eq' },
+    { label: '0', action: '0' },
+    { label: '00', action: '00' },
+    { label: '.', action: '.' }
+  ];
+
+  grid.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = b.label;
+    if (b.cls) btn.className = b.cls;
+    btn.onclick = () => handleCalcKey(b.action);
+    grid.appendChild(btn);
+  });
+
+  const applyBtn = document.createElement('button');
+  applyBtn.type = 'button';
+  applyBtn.className = 'apply';
+  applyBtn.textContent = '✓ Apply to field';
+  applyBtn.onclick = applyCalcResult;
+  grid.appendChild(applyBtn);
+}
+
+function handleCalcKey(action) {
+  if (action === 'clear') {
+    calcExpression = ''; calcResult = 0; calcJustEvaluated = false;
+  } else if (action === 'back') {
+    calcExpression = calcExpression.slice(0, -1); calcJustEvaluated = false;
+  } else if (action === '=') {
+    evaluateCalc(); calcJustEvaluated = true;
+  } else if (['+', '-', '*', '/'].includes(action)) {
+    if (calcJustEvaluated) {
+      calcExpression = String(calcResult); calcJustEvaluated = false;
+    }
+    const lastChar = calcExpression.slice(-1);
+    if (['+', '-', '*', '/'].includes(lastChar)) {
+      calcExpression = calcExpression.slice(0, -1) + action;
+    } else if (calcExpression !== '') {
+      calcExpression += action;
+    }
+  } else if (action === '.') {
+    const parts = calcExpression.split(/[+\-*/]/);
+    const lastPart = parts[parts.length - 1];
+    if (!lastPart.includes('.')) {
+      if (lastPart === '') calcExpression += '0.'; else calcExpression += '.';
+    }
+  } else {
+    if (calcJustEvaluated) {
+      calcExpression = action; calcJustEvaluated = false;
+    } else {
+      calcExpression += action;
+    }
+  }
+  updateCalcDisplay();
+}
+
+function evaluateCalc() {
+  if (!calcExpression) { calcResult = 0; return; }
+  try {
+    const safe = calcExpression.replace(/[^0-9+\-*/.()]/g, '');
+    const res = Function('"use strict";return (' + safe + ')')();
+    calcResult = isFinite(res) ? res : 0;
+  } catch (e) { calcResult = 0; }
+}
+
+function updateCalcDisplay() {
+  const display = document.getElementById('calcDisplay');
+  if (calcExpression === '') {
+    display.innerHTML = '0<span class="preview" id="calcPreview"></span>';
+    return;
+  }
+  const pretty = calcExpression
+    .replace(/\*/g, ' × ').replace(/\//g, ' ÷ ').replace(/-/g, ' − ');
+  let previewText = '';
+  try {
+    const safe = calcExpression.replace(/[^0-9+\-*/.()]/g, '');
+    const res = Function('"use strict";return (' + safe + ')')();
+    if (isFinite(res) && calcExpression.length > 1 && /[+\-*/]/.test(calcExpression)) {
+      const num = Math.round(res);
+      previewText = '= ' + num.toLocaleString('en-US');
+    }
+  } catch (e) {}
+  display.innerHTML = pretty + (previewText ? `<span class="preview">${previewText}</span>` : '<span class="preview"></span>');
+}
+
+function applyCalcResult() {
+  if (!calcTargetInput) return;
+  if (/[+\-*/]/.test(calcExpression)) {
+    evaluateCalc();
+  } else if (calcExpression !== '') {
+    calcResult = Number(calcExpression);
+  } else {
+    calcResult = 0;
+  }
+  const rounded = Math.round(calcResult);
+  calcTargetInput.value = rounded.toLocaleString('en-US');
+  closeMiniCalc();
+  calcTargetInput.focus();
+}
+
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('miniCalc');
+  if (!popup.classList.contains('open')) return;
+  if (popup.contains(e.target)) return;
+  if (e.target.closest('.calc-trigger')) return;
+  closeMiniCalc();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeMiniCalc();
+});
+
+function calculate() {
+  const t = translations[currentLang];
+  const name = document.getElementById('employeeName').value.trim() || t.no_name;
+  const dept = document.getElementById('department').value.trim() || t.dash;
+
+  const base = val('baseSalary');
+  const benefits = val('benefits');
+  const tax = val('tax');
+  const overhead = val('overhead');
+  const workHours = val('workHours') || 1800;
+  const absenceHours = val('absenceHours');
+  const mgmtHours = val('mgmtHours');
+  const damage = val('directDamage');
+  const profit = val('projectProfit');
+
+  const J = getFactor(document.getElementById('jobLevel').value, 'jobLevel');
+  const C = getFactor(document.getElementById('presence').value, 'presence');
+  const E = getFactor(document.getElementById('experience').value, 'experience');
+  const T = getFactor(document.getElementById('turnover').value, 'turnover');
+  const R = getFactor(document.getElementById('replacement').value, 'replacement');
+  const perfScore = Number(document.getElementById('performance').value);
+
+  const S = base + benefits + tax + overhead;
+  const H = S / workHours;
+  const P = perfScore / 5;
+  const G = 1 - P;
+
+  const item1 = S * G * J * C * 0.15;
+  const item2 = S * G * J * 0.10;
+  const item3 = H * absenceHours * C * J;
+  const item4 = S * T * R * E * C;
+  const item5 = S * T * E * C * 0.30;
+  const item6 = S * T * 0.5 * E * C;
+  const item7 = H * mgmtHours * C;
+
+  const sumWithOverlap = (item1 + item2 + item3 + item4 + item5 + item6 + item7) * 0.85;
+  const total = sumWithOverlap + damage - profit;
+  const ratioS = S > 0 ? (total / S) * 100 : 0;
+  const ratioBase = base > 0 ? (total / base) * 100 : 0;
+
+  document.getElementById('employeeInfo').innerHTML =
+    `<strong>${t.emp_name}:</strong> ${name} &nbsp;|&nbsp; <strong>${t.emp_dept}:</strong> ${dept} &nbsp;|&nbsp; <strong>${t.emp_total}:</strong> ${fmt(S)} ${t.curr}`;
+
+  const rows = [
+    [t.item1, item1], [t.item2, item2], [t.item3, item3], [t.item4, item4],
+    [t.item5, item5], [t.item6, item6], [t.item7, item7],
+    [t.sum7, sumWithOverlap], [t.damage, damage], [t.profit, -profit]
+  ];
+
+  let html = '';
+  rows.forEach(([label, v], i) => {
+    const isSum = (i === 7);
+    const isNeg = (i === 9);
+    const style = isSum ? 'background:#E2EFDA;font-weight:bold;' : isNeg ? 'color:#008000;' : '';
+    html += `<tr style="${style}"><td>${label}</td><td>${fmt(v)}</td></tr>`;
+  });
+  document.getElementById('resultsBody').innerHTML = html;
+
+  const color = total >= 0 ? '#C00000' : '#008000';
+  const badge = total >= 0
+    ? `<span class="badge badge-pos">${t.badge_pos}</span>`
+    : `<span class="badge badge-neg">${t.badge_neg}</span>`;
+
+  const currSuffix = t.curr ? ' ' + t.curr : '';
+  document.getElementById('summaryBox').innerHTML = `
+    <div class="total" style="color:${color};">
+      ${t.total}: ${fmt(total)}${currSuffix}
+    </div>
+    <div class="ratio">
+      ${badge}<br>
+      ${t.ratioS}: <strong>${ratioS.toFixed(1)}%</strong>
+      &nbsp;|&nbsp;
+      ${t.ratioBase}: <strong>${ratioBase.toFixed(1)}%</strong>
+    </div>
+  `;
+
+  document.getElementById('resultsCard').style.display = 'block';
+  document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+  document.getElementById('resultsCard').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  const moneyFields = [
+    'baseSalary', 'benefits', 'tax', 'overhead',
+    'directDamage', 'projectProfit',
+    'workHours', 'absenceHours', 'mgmtHours'
+  ];
+  moneyFields.forEach(attachCommaFormat);
+  setLang('en');
+});
+
+// ============ V2 COMPANY DASHBOARD LOGIC ============
+const V2_STORAGE_KEY = 'hiddenCostCompanyV2';
+let lastCalcV2 = null;
+
+function showView(view){
+  const calc=document.getElementById('calcView'), dash=document.getElementById('dashView');
+  const nc=document.getElementById('navCalc'), nd=document.getElementById('navDash');
+  if(view==='dash'){
+    calc.style.display='none'; dash.classList.add('active'); nc.classList.remove('active'); nd.classList.add('active'); renderDashboard();
+  } else {
+    calc.style.display='block'; dash.classList.remove('active'); nc.classList.add('active'); nd.classList.remove('active');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function companyData(){ try{return JSON.parse(localStorage.getItem(V2_STORAGE_KEY)||'[]')}catch(e){return[]} }
+function setCompanyData(d){ localStorage.setItem(V2_STORAGE_KEY,JSON.stringify(d)); }
+function captureCurrentCalculation(){
+  const base=val('baseSalary'), benefits=val('benefits'), tax=val('tax'), overhead=val('overhead');
+  const workHours=val('workHours')||1800, absenceHours=val('absenceHours'), mgmtHours=val('mgmtHours');
+  const damage=val('directDamage'), profit=val('projectProfit');
+  const J=getFactor(document.getElementById('jobLevel').value,'jobLevel');
+  const C=getFactor(document.getElementById('presence').value,'presence');
+  const E=getFactor(document.getElementById('experience').value,'experience');
+  const T=getFactor(document.getElementById('turnover').value,'turnover');
+  const R=getFactor(document.getElementById('replacement').value,'replacement');
+  const perfScore=Number(document.getElementById('performance').value), S=base+benefits+tax+overhead, H=S/workHours, G=1-perfScore/5;
+  const items=[S*G*J*C*.15,S*G*J*.10,H*absenceHours*C*J,S*T*R*E*C,S*T*E*C*.30,S*T*.5*E*C,H*mgmtHours*C];
+  const sum7=items.reduce((a,b)=>a+b,0)*.85, total=sum7+damage-profit;
+  return {id:Date.now(),savedAt:new Date().toISOString(),name:document.getElementById('employeeName').value.trim()||'Unnamed',department:document.getElementById('department').value.trim()||'Unassigned',
+    base,benefits,tax,overhead,workHours,absenceHours,mgmtHours,damage,profit,J,C,E,T,R,perfScore,S,items,sum7,total,
+    selections:{jobLevel:document.getElementById('jobLevel').value,presence:document.getElementById('presence').value,experience:document.getElementById('experience').value,turnover:document.getElementById('turnover').value,replacement:document.getElementById('replacement').value}};
+}
+function saveCurrentEmployee(){
+  lastCalcV2=captureCurrentCalculation(); const d=companyData();
+  const ix=d.findIndex(x=>x.name===lastCalcV2.name && x.department===lastCalcV2.department);
+  if(ix>=0){ if(confirm('An employee with the same name and department exists. Replace the previous record?')) d[ix]=lastCalcV2; else return; }
+  else d.push(lastCalcV2);
+  setCompanyData(d); alert('Employee saved to the Company Dashboard.'); showView('dash');
+}
+function moneyV2(n){ return Math.round(n||0).toLocaleString(currentLang==='fa'?'fa-IR':'en-US'); }
+function riskClass(r){ return r>=.50?'risk-high':r>=.25?'risk-med':'risk-low'; }
+function renderDashboard(){
+  const d=companyData(); document.getElementById('kEmployees').textContent=d.length;
+  const totalHidden=d.reduce((a,x)=>a+x.total,0), totalS=d.reduce((a,x)=>a+x.S,0);
+  document.getElementById('kHidden').textContent=moneyV2(totalHidden); document.getElementById('kRatio').textContent=(totalS?totalHidden/totalS*100:0).toFixed(1)+'%';
+  const depts={}; d.forEach(x=>{ if(!depts[x.department])depts[x.department]={n:0,total:0,S:0}; depts[x.department].n++;depts[x.department].total+=x.total;depts[x.department].S+=x.S; });
+  const deptEntries=Object.entries(depts).sort((a,b)=>b[1].total-a[1].total); document.getElementById('kDept').textContent=deptEntries.length?deptEntries[0][0]:'—';
+  const labels=['Presenteeism','Talent waste','Absence & delay','Replacement & turnover','Knowledge loss','Successor training','Extra management'];
+  const sums=labels.map((_,i)=>d.reduce((a,x)=>a+(x.items?.[i]||0)*.85,0)); const max=Math.max(...sums,1);
+  document.getElementById('driverChart').innerHTML=d.length?sums.map((v,i)=>`<div class="driver-row"><span>${labels[i]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(1,v/max*100)}%"></div></div><strong>${moneyV2(v)}</strong></div>`).join(''):'<div class="empty-state">No employees saved yet. Calculate an employee and save the result.</div>';
+  document.getElementById('deptTable').innerHTML=deptEntries.length?`<table><thead><tr><th>Department</th><th>Employees</th><th>Hidden Cost</th><th>% Employment Cost</th></tr></thead><tbody>${deptEntries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${v.n}</td><td>${moneyV2(v.total)}</td><td>${(v.S?v.total/v.S*100:0).toFixed(1)}%</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">Department analysis will appear after employees are saved.</div>';
+  const ranked=[...d].map(x=>({...x,risk:x.S?Math.max(0,x.total/x.S):0})).sort((a,b)=>b.risk-a.risk).slice(0,8);
+  document.getElementById('riskTable').innerHTML=ranked.length?`<table><thead><tr><th>Employee</th><th>Dept.</th><th>Ratio</th><th></th></tr></thead><tbody>${ranked.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.department)}</td><td class="${riskClass(x.risk)}">${(x.risk*100).toFixed(1)}%</td><td><button class="small-btn small-red" onclick="deleteEmployee(${x.id})">×</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">No employee risk profile available.</div>';
+  let insight='No portfolio data yet.'; if(d.length){ const mi=sums.indexOf(Math.max(...sums)); insight=`The largest model-derived cost driver is <strong>${labels[mi]}</strong>, representing ${totalHidden?((sums[mi]/Math.max(totalHidden,1))*100).toFixed(1):'0'}% of net hidden cost. ${deptEntries.length?`The department with the highest total hidden cost is <strong>${escapeHtml(deptEntries[0][0])}</strong>.`:''} Review the underlying recorded inputs before taking action, then use the scenario tool to estimate the value of improvement.`; }
+  document.getElementById('managementInsight').innerHTML=insight;
+  const sel=document.getElementById('scenarioEmployee'); sel.innerHTML=d.length?d.map(x=>`<option value="${x.id}">${escapeHtml(x.name)} — ${escapeHtml(x.department)}</option>`).join(''):'<option value="">No saved employees</option>'; if(d.length) loadScenarioEmployee();
+}
+function escapeHtml(v){ return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+function deleteEmployee(id){ if(!confirm('Delete this saved employee record?'))return; setCompanyData(companyData().filter(x=>x.id!==id)); renderDashboard(); }
+function loadScenarioEmployee(){ const id=Number(document.getElementById('scenarioEmployee').value),x=companyData().find(a=>a.id===id); if(!x)return; document.getElementById('scenarioPerf').value=String(x.perfScore);document.getElementById('scenarioAbsence').value=x.absenceHours;document.getElementById('scenarioTurn').value=String(x.T);document.getElementById('scenarioInvestment').value=0;document.getElementById('scenarioResult').innerHTML=''; }
+function runScenario(){
+  const id=Number(document.getElementById('scenarioEmployee').value),x=companyData().find(a=>a.id===id); if(!x)return;
+  const perf=Number(document.getElementById('scenarioPerf').value), abs=Number(document.getElementById('scenarioAbsence').value)||0, T=Number(document.getElementById('scenarioTurn').value), invest=Number(document.getElementById('scenarioInvestment').value)||0;
+  const H=x.S/x.workHours,G=1-perf/5; const items=[x.S*G*x.J*x.C*.15,x.S*G*x.J*.10,H*abs*x.C*x.J,x.S*T*x.R*x.E*x.C,x.S*T*x.E*x.C*.30,x.S*T*.5*x.E*x.C,H*x.mgmtHours*x.C];
+  const projected=items.reduce((a,b)=>a+b,0)*.85+x.damage-x.profit, recovered=x.total-projected, net=recovered-invest, roi=invest>0?net/invest*100:null;
+  document.getElementById('scenarioResult').innerHTML=`<div class="scenario-result"><strong>Current hidden cost:</strong> ${moneyV2(x.total)} &nbsp; | &nbsp; <strong>Projected:</strong> ${moneyV2(projected)}<br><strong>Potential value recovered:</strong> ${moneyV2(recovered)} &nbsp; | &nbsp; <strong>Net after intervention:</strong> ${moneyV2(net)} ${roi!==null?`&nbsp; | &nbsp; <strong>ROI:</strong> ${roi.toFixed(1)}%`:''}<br><span class="confidence">Scenario estimate — validate assumptions with company data</span></div>`;
+}
+function exportCompanyData(){ const blob=new Blob([JSON.stringify(companyData(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='hidden-cost-company-data.json';a.click();URL.revokeObjectURL(a.href); }
+function importCompanyData(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw 0;setCompanyData(d);renderDashboard();alert('Company data imported.')}catch(_){alert('Invalid data file.')}};r.readAsText(f);e.target.value=''; }
+function clearCompanyData(){ if(confirm('Clear all employees saved in this browser?')){localStorage.removeItem(V2_STORAGE_KEY);renderDashboard();} }
+
+
+function openFeedbackEmail(){
+  const subject = encodeURIComponent('Feedback — Hidden Cost Company Dashboard');
+  const body = encodeURIComponent(
+`Hello Farhad,
+
+I tested the Hidden Cost Company Dashboard and would like to share the following feedback:
+
+What I liked:
+
+What could be improved:
+
+Were any results unclear or unrealistic?
+
+My role / industry (optional):
+
+Would I use this tool again? Yes / No / Maybe
+
+Additional comments:
+
+Thank you.`
+  );
+  window.location.href = `mailto:farhad.khazaeli@gmail.com?subject=${subject}&body=${body}`;
+}
+</script>
+
+</body>
+</html>
